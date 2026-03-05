@@ -6,12 +6,15 @@
 
 import { Outlet } from "react-router";
 import { Toaster } from 'sonner';
+import { IonPage, IonContent } from '@ionic/react';
 
 export function RootLayout() {
   return (
-    <>
-      <Outlet />
-      <Toaster position="top-right" richColors />
-    </>
+    <IonPage>
+      <IonContent>
+        <Outlet />
+        <Toaster position="top-right" richColors />
+      </IonContent>
+    </IonPage>
   );
 }

@@ -3,50 +3,59 @@
  * - Implement as standalone component
  * - Use ActivatedRoute to get pratica ID from URL params
  * - Inject PraticaService to fetch pratica data
- * - Use signals for reactive state:
- *   - pratica = signal<Pratica | null>(null)
- *   - loading = signal<boolean>(true)
- *   - showComunicazioneDialog = signal<boolean>(false)
- * - Implement navigation back to dashboard
- * - Handle state updates with optimistic UI
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Badge } from './ui/badge';
-import { Button } from './ui/button';
-import { Textarea } from './ui/textarea';
-import { 
-  ArrowLeft, 
-  Car, 
-  Calendar, 
-  User, 
-  Phone, 
-  Mail, 
-  FileText, 
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  MessageSquare,
-  Download,
-  Bell,
-  LogOut
-} from 'lucide-react';
-import { praticheMock, Pratica, getStatoLabel, getStatoColor } from '../data/mockData';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { toast } from 'sonner';
+import {
+  IonPage,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonButtons,
+  IonButton,
+  IonIcon,
+  IonBadge,
+  IonCard,
+  IonCardContent,
+  IonList,
+  IonItem,
+  IonLabel,
+  IonNote
+} from '@ionic/react';
+import { 
+  arrowBackOutline, 
+  carOutline, 
+  calendarOutline, 
+  personOutline, 
+  callOutline, 
+  documentTextOutline, 
+  timeOutline,
+  checkmarkCircleOutline,
+  alertCircleOutline,
+  chatbubbleOutline,
+  downloadOutline,
+  notificationsOutline,
+  logOutOutline,
+  listOutline,
+  shieldCheckmarkOutline,
+  mailOutline
+} from 'ionicons/icons';
+import { praticheMock, Pratica, getStatoLabel, getStatoColor } from '../data/mockData';
 import { notificationService } from '../services/notificationService';
+import { Textarea } from './ui/textarea';
 
 export function DettaglioPratica() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [pratica, setPratica] = useState<Pratica | null>(null);
+  const [pratica, setPratica] = useState<any | null>(null);
   const [showComunicazione, setShowComunicazione] = useState(false);
   const [messaggioCliente, setMessaggioCliente] = useState('');
   const [notificationCount, setNotificationCount] = useState(0);
 
   useEffect(() => {
-    // In produzione: fetch from service
     const found = praticheMock.find(p => p.id === id);
     setPratica(found || null);
     
@@ -54,22 +63,14 @@ export function DettaglioPratica() {
     return () => unsubscribe();
   }, [id]);
 
-  const handleBack = () => {
-    navigate('/dashboard');
-  };
+  const handleBack = () => navigate('/dashboard');
+  const handleLogout = () => navigate('/');
+  const handleNotifiche = () => navigate('/notifiche');
 
-  const handleLogout = () => {
-    navigate('/');
-  };
-
-  const handleNotifiche = () => {
-    navigate('/notifiche');
-  };
-
-  const handleCambioStato = (nuovoStato: Pratica['stato']) => {
+  const handleCambioStato = (nuovoStato: string) => {
     if (pratica) {
       setPratica({ ...pratica, stato: nuovoStato });
-      toast.success(`Stato aggiornato a: ${getStatoLabel(nuovoStato)}`);
+      toast.success(`Stato aggiornato a: ${getStatoLabel(nuovoStato as Pratica['stato'])}`);
     }
   };
 
@@ -85,22 +86,30 @@ export function DettaglioPratica() {
 
   if (!pratica) {
     return (
-      <div className="min-h-screen bg-[#F4F4F4] flex items-center justify-center">
-        <Card className="w-96">
-          <CardContent className="py-16 text-center">
-            <AlertCircle className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-            <p className="text-xl text-gray-500 mb-2">Pratica non trovata</p>
-            <Button onClick={handleBack} className="mt-4">
-              Torna alla Dashboard
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <IonPage>
+        <IonHeader className="ion-no-border">
+          <IonToolbar className="[--background:#005461] text-white">
+            <IonButtons slot="start"><IonButton onClick={handleBack} className="text-white"><IonIcon icon={arrowBackOutline} /></IonButton></IonButtons>
+            <IonTitle>Errore</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent className="[--background:#EDEDCE]">
+          <div className="flex h-full items-center justify-center p-4">
+            <IonCard className="w-full text-center py-12 bg-white rounded-xl shadow-sm border-transparent">
+              <IonIcon icon={alertCircleOutline} className="text-6xl text-[#629FAD] mb-4" />
+              <p className="text-xl text-[#296374] mb-6 font-medium">Pratica non trovata</p>
+              <button onClick={handleBack} className="px-6 py-2.5 bg-[#0C7779] text-white rounded-lg font-medium shadow-md active:scale-95 transition-all">
+                Torna Indietro
+              </button>
+            </IonCard>
+          </div>
+        </IonContent>
+      </IonPage>
     );
   }
 
-  const getStatoSuccessivo = (statoCorrente: Pratica['stato']): Pratica['stato'] | null => {
-    const flusso: Pratica['stato'][] = ['non_assegnata', 'in_attesa', 'in_lavorazione', 'in_attesa_riconsegna', 'completata'];
+  const getStatoSuccessivo = (statoCorrente: string): string | null => {
+    const flusso = ['non_assegnata', 'in_attesa', 'in_lavorazione', 'in_attesa_riconsegna', 'completata'];
     const index = flusso.indexOf(statoCorrente);
     return index < flusso.length - 1 ? flusso[index + 1] : null;
   };
@@ -108,310 +117,229 @@ export function DettaglioPratica() {
   const statoSuccessivo = getStatoSuccessivo(pratica.stato);
 
   return (
-    <div className="min-h-screen bg-[#F4F4F4]">
-      {/* Header */}
-      <div className="bg-[#088395] border-b border-[#09637E]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleBack}
-                className="bg-white/10 hover:bg-white/20 text-white"
+    <IonPage>
+      {/* HEADER NATIVO */}
+      <IonHeader className="ion-no-border">
+        <IonToolbar className="[--background:#005461] md:[--background:#088395] text-white">
+          <IonButtons slot="start">
+            <IonButton onClick={handleBack} className="active:scale-95 transition-transform text-white">
+              <IonIcon icon={arrowBackOutline} slot="icon-only" />
+            </IonButton>
+          </IonButtons>
+          <IonTitle className="font-bold text-white text-center text-sm md:text-lg">
+            Pratica {pratica.numero || pratica.id}
+          </IonTitle>
+          <IonButtons slot="end">
+            <IonButton onClick={handleNotifiche} className="relative active:scale-95 text-white">
+              <IonIcon icon={notificationsOutline} slot="icon-only" />
+              {notificationCount > 0 && (
+                <IonBadge color="danger" className="absolute top-0 right-0 transform translate-x-1 -translate-y-1 rounded-full text-[10px] px-1.5 py-0.5">
+                  {notificationCount}
+                </IonBadge>
+              )}
+            </IonButton>
+            <IonButton onClick={handleLogout} className="active:scale-95 text-white">
+              <IonIcon icon={logOutOutline} slot="icon-only" />
+            </IonButton>
+          </IonButtons>
+        </IonToolbar>
+      </IonHeader>
+
+      <IonContent className="[--background:#EDEDCE] md:[--background:#F4F4F4]">
+        
+        {/* HERO SECTION (Info Principali) */}
+        <div className="bg-[#005461] md:bg-[#088395] px-4 pb-12 pt-4 rounded-b-[2.5rem] shadow-sm text-center relative">
+          <p className="text-[#629FAD] md:text-[#EBF4F6] text-sm font-medium mb-3 uppercase tracking-wider">Stato Attuale</p>
+          
+          {/* BADGE STATO AD ALTO CONTRASTO */}
+          <div className="inline-block px-6 py-2 rounded-full text-sm font-black shadow-lg mb-6 bg-[#EDEDCE] text-[#0C2C55] uppercase tracking-wide border-2 border-white/20">
+            {getStatoLabel(pratica.stato)}
+          </div>
+          
+          <div className="flex flex-col items-center justify-center">
+            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">
+              €{pratica.preventivo?.importoTotale ? pratica.preventivo.importoTotale.toLocaleString('it-IT', { minimumFractionDigits: 2 }) : '0,00'}
+            </h2>
+            <p className="text-[#629FAD] md:text-[#EBF4F6] text-sm mt-1 font-medium flex items-center gap-1">
+              <IonIcon icon={documentTextOutline} /> Preventivo Totale
+            </p>
+          </div>
+        </div>
+
+        {/* CONTENUTO DELLA PAGINA */}
+        <div className="max-w-4xl mx-auto px-4 -mt-8 relative z-10 pb-12">
+          
+          {/* QUICK ACTIONS */}
+          <div className="flex gap-3 mb-6">
+            {statoSuccessivo ? (
+              <button
+                onClick={() => handleCambioStato(statoSuccessivo)}
+                className="flex-1 bg-[#0C7779] md:bg-[#088395] text-white py-3.5 rounded-2xl shadow-lg font-bold flex flex-col items-center justify-center gap-1 active:bg-[#005461] active:scale-[0.97] transition-all border border-[#0C7779]/20"
               >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <div>
-                <h1 className="text-3xl text-white">Dettaglio Pratica</h1>
-                <p className="text-[#EBF4F6] mt-1">{pratica.id}</p>
+                <IonIcon icon={checkmarkCircleOutline} className="text-2xl" />
+                <span className="text-[11px] md:text-xs uppercase tracking-wider">Avanza Stato</span>
+              </button>
+            ) : (
+              <button className="flex-1 bg-gray-100 text-gray-400 py-3.5 rounded-2xl shadow-sm font-bold flex flex-col items-center justify-center gap-1 opacity-80 cursor-not-allowed border border-gray-200">
+                <IonIcon icon={checkmarkCircleOutline} className="text-2xl" />
+                <span className="text-[11px] md:text-xs uppercase tracking-wider">Completata</span>
+              </button>
+            )}
+            
+            <button
+              onClick={() => setShowComunicazione(!showComunicazione)}
+              className="flex-1 bg-white text-[#0C7779] md:text-[#088395] py-3.5 rounded-2xl shadow-lg font-bold flex flex-col items-center justify-center gap-1 active:bg-gray-50 active:scale-[0.97] transition-all border border-[#0C7779]/20"
+            >
+              <IonIcon icon={chatbubbleOutline} className="text-2xl" />
+              <span className="text-[11px] md:text-xs uppercase tracking-wider">Contatta</span>
+            </button>
+          </div>
+
+          {/* FORM COMUNICAZIONE */}
+          {showComunicazione && (
+            <IonCard className="m-0 mb-6 bg-white border border-[#0C7779]/30 rounded-2xl shadow-md">
+              <IonCardContent className="p-5">
+                <label className="block text-sm font-bold text-[#0C2C55] mb-2 flex items-center gap-2">
+                  <IonIcon icon={mailOutline} className="text-[#0C7779]" /> Messaggio per il cliente
+                </label>
+                <Textarea
+                  value={messaggioCliente}
+                  onChange={(e) => setMessaggioCliente(e.target.value)}
+                  placeholder="Scrivi qui il messaggio..."
+                  rows={4}
+                  className="bg-[#EDEDCE]/30 border-[#629FAD]/50 focus-visible:ring-[#0C7779] rounded-xl mb-3 text-[#0C2C55]"
+                />
+                <div className="flex gap-2">
+                  <button onClick={handleInviaComunicazione} className="flex-1 py-2.5 bg-[#0C7779] text-white rounded-xl font-bold active:scale-95 transition-all">Invia</button>
+                  <button onClick={() => setShowComunicazione(false)} className="flex-1 py-2.5 bg-gray-100 text-[#296374] rounded-xl font-bold active:scale-95 transition-all">Annulla</button>
+                </div>
+              </IonCardContent>
+            </IonCard>
+          )}
+
+          {/* INFO GENERALI (IonList) */}
+          <IonCard className="m-0 mb-6 rounded-2xl shadow-sm bg-white overflow-hidden border-transparent">
+            <div className="bg-[#249E94]/10 md:bg-[#EBF4F6] px-5 py-3 border-b border-[#0C7779]/10">
+              <h3 className="text-[#0C7779] md:text-[#088395] font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                <IonIcon icon={listOutline} className="text-lg" /> Info Generali
+              </h3>
+            </div>
+            <IonList lines="full" className="bg-transparent py-0">
+              <IonItem className="[--background:transparent]">
+                <IonIcon icon={carOutline} slot="start" className="text-[#629FAD] md:text-gray-400" />
+                <IonLabel className="text-[#296374] font-medium text-sm">Veicolo</IonLabel>
+                <IonNote slot="end" className="text-[#0C2C55] md:text-gray-900 font-bold">{pratica.veicolo?.marca || 'N/D'} {pratica.veicolo?.modello || ''}</IonNote>
+              </IonItem>
+              <IonItem className="[--background:transparent]">
+                <IonLabel className="text-[#296374] font-medium text-sm ml-8">Targa</IonLabel>
+                <IonNote slot="end" className="text-[#0C2C55] md:text-gray-900 font-bold">{pratica.veicolo?.targa || 'N/D'}</IonNote>
+              </IonItem>
+              <IonItem className="[--background:transparent]">
+                <IonIcon icon={personOutline} slot="start" className="text-[#629FAD] md:text-gray-400" />
+                <IonLabel className="text-[#296374] font-medium text-sm">Cliente</IonLabel>
+                <IonNote slot="end" className="text-[#0C2C55] md:text-gray-900 font-bold">{pratica.automobilista?.nome || 'N/D'} {pratica.automobilista?.cognome || ''}</IonNote>
+              </IonItem>
+              <IonItem className="[--background:transparent]" button onClick={() => window.open(`tel:${pratica.automobilista?.telefono}`)}>
+                <IonIcon icon={callOutline} slot="start" className="text-[#0C7779]" />
+                <IonLabel className="text-[#296374] font-medium text-sm">Telefono</IonLabel>
+                <IonNote slot="end" className="text-[#0C7779] font-bold underline">{pratica.automobilista?.telefono || 'N/D'}</IonNote>
+              </IonItem>
+              <IonItem className="[--background:transparent]" lines="none">
+                <IonIcon icon={calendarOutline} slot="start" className="text-[#629FAD] md:text-gray-400" />
+                <IonLabel className="text-[#296374] font-medium text-sm">Data Arrivo</IonLabel>
+                <IonNote slot="end" className="text-[#0C2C55] md:text-gray-900 font-bold">
+                  {pratica.dataApertura ? new Date(pratica.dataApertura).toLocaleDateString('it-IT') : 'N/D'}
+                </IonNote>
+              </IonItem>
+            </IonList>
+          </IonCard>
+
+          {/* RIPARAZIONE */}
+          <IonCard className="m-0 mb-6 rounded-2xl shadow-sm bg-white overflow-hidden border-transparent">
+            <div className="bg-[#249E94]/10 md:bg-[#EBF4F6] px-5 py-3 border-b border-[#0C7779]/10">
+              <h3 className="text-[#0C7779] md:text-[#088395] font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                <IonIcon icon={shieldCheckmarkOutline} className="text-lg" /> Riparazione
+              </h3>
+            </div>
+            <IonCardContent className="p-5">
+              <div className="mb-4">
+                <p className="text-xs text-[#296374] font-bold uppercase tracking-wider mb-2">Note Interne / Danni</p>
+                <p className="text-[#0C2C55] bg-[#EDEDCE]/40 p-3 rounded-xl border border-[#629FAD]/20 leading-relaxed text-sm">
+                  {pratica.noteInterne || pratica.descrizione || 'Nessuna nota o descrizione disponibile.'}
+                </p>
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                  <p className="text-xs text-[#629FAD] font-bold uppercase tracking-wider mb-1">ID Preventivo</p>
+                  <p className="text-[#0C2C55] font-bold text-sm">{pratica.preventivo?.id || 'N/D'}</p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                  <p className="text-xs text-[#629FAD] font-bold uppercase tracking-wider mb-1">Tempo Stimato</p>
+                  <p className="text-[#0C2C55] font-bold text-sm flex items-center gap-1">
+                    <IonIcon icon={timeOutline} /> {pratica.preventivo?.tempoStimato || 'N/D'}
+                  </p>
+                </div>
+              </div>
+            </IonCardContent>
+          </IonCard>
+
+          {/* TIMELINE */}
+          <IonCard className="m-0 mb-6 rounded-2xl shadow-sm bg-white overflow-hidden border-transparent">
+            <div className="bg-[#249E94]/10 md:bg-[#EBF4F6] px-5 py-3 border-b border-[#0C7779]/10">
+              <h3 className="text-[#0C7779] md:text-[#088395] font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                <IonIcon icon={timeOutline} className="text-lg" /> Timeline Pratica
+              </h3>
             </div>
-            <div className="flex items-center gap-3">
-              {/* Campanellina Notifiche */}
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={handleNotifiche}
-                className="relative bg-white/10 hover:bg-white/20 text-white"
-                title="Visualizza notifiche"
-              >
-                <Bell className="h-5 w-5" />
-                {notificationCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {notificationCount}
-                  </span>
-                )}
-              </Button>
+            <IonCardContent className="p-6">
+              <div className="space-y-6">
+                {[
+                  { stato: 'non_assegnata', label: 'Ricevuta' },
+                  { stato: 'in_attesa', label: 'Assegnata' },
+                  { stato: 'in_lavorazione', label: 'In Lavorazione' },
+                  { stato: 'in_attesa_riconsegna', label: 'Pronta' },
+                  { stato: 'completata', label: 'Completata' },
+                ].map((item, index) => {
+                  const flusso = ['non_assegnata', 'in_attesa', 'in_lavorazione', 'in_attesa_riconsegna', 'completata'];
+                  const currentIndex = flusso.indexOf(pratica.stato);
+                  const isCompleted = index <= currentIndex;
+                  const isCurrent = index === currentIndex;
 
-              {/* Logout Button */}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleLogout}
-                className="bg-white/10 hover:bg-white/20 text-white"
-                title="Logout"
-              >
-                <LogOut className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Colonna Sinistra - Informazioni Principali */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Stato e Azioni */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Stato Pratica</span>
-                  <Badge className={getStatoColor(pratica.stato)}>
-                    {getStatoLabel(pratica.stato)}
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex gap-3">
-                    {statoSuccessivo && (
-                      <Button
-                        onClick={() => handleCambioStato(statoSuccessivo)}
-                        className="flex-1"
-                      >
-                        <CheckCircle2 className="h-4 w-4 mr-2" />
-                        Passa a: {getStatoLabel(statoSuccessivo)}
-                      </Button>
-                    )}
-                    {pratica.stato === 'completata' && (
-                      <Button className="flex-1" variant="outline" disabled>
-                        <CheckCircle2 className="h-4 w-4 mr-2" />
-                        Pratica Completata
-                      </Button>
-                    )}
-                  </div>
-                  
-                  {pratica.stato !== 'completata' && (
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowComunicazione(!showComunicazione)}
-                      className="w-full"
-                    >
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      {showComunicazione ? 'Nascondi' : 'Comunica con'} il Cliente
-                    </Button>
-                  )}
-                </div>
-
-                {/* Form Comunicazione */}
-                {showComunicazione && (
-                  <div className="mt-4 p-4 bg-[#EBF4F6] rounded-lg space-y-3">
-                    <label className="block text-sm font-semibold text-[#061E29]">
-                      Messaggio per il cliente
-                    </label>
-                    <Textarea
-                      value={messaggioCliente}
-                      onChange={(e) => setMessaggioCliente(e.target.value)}
-                      placeholder="Es: Il veicolo è pronto per la riconsegna. Può passare a ritirarlo dal lunedì al venerdì dalle 9:00 alle 18:00."
-                      rows={4}
-                      className="bg-white"
-                    />
-                    <div className="flex gap-2">
-                      <Button onClick={handleInviaComunicazione} className="flex-1">
-                        <Mail className="h-4 w-4 mr-2" />
-                        Invia Email
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        onClick={() => setShowComunicazione(false)}
-                        className="flex-1"
-                      >
-                        Annulla
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Informazioni Veicolo */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Car className="h-5 w-5 text-[#088395]" />
-                  Informazioni Veicolo
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-500">Targa</p>
-                    <p className="font-semibold text-lg">{pratica.targa}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Marca</p>
-                    <p className="font-semibold">{pratica.marca}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Modello</p>
-                    <p className="font-semibold">{pratica.modello}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Data Arrivo</p>
-                    <p className="font-semibold flex items-center gap-1">
-                      <Calendar className="h-4 w-4 text-[#7AB2B2]" />
-                      {new Date(pratica.dataArrivo).toLocaleDateString('it-IT')}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Informazioni Cliente */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5 text-[#088395]" />
-                  Informazioni Cliente
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-gray-400" />
-                    <span className="font-semibold">{pratica.cliente}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-gray-400" />
-                    <a href={`tel:${pratica.telefono}`} className="text-[#088395] hover:underline">
-                      {pratica.telefono}
-                    </a>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-gray-400" />
-                    <a href={`mailto:${pratica.email}`} className="text-[#088395] hover:underline">
-                      {pratica.email}
-                    </a>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Dettagli Riparazione */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-[#088395]" />
-                  Dettagli Riparazione
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-gray-500 mb-2">Descrizione Danni</p>
-                    <p className="text-sm bg-[#EBF4F6] p-3 rounded">
-                      {pratica.descrizione || 'Nessuna descrizione disponibile'}
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 pt-2 border-t">
-                    <div>
-                      <p className="text-sm text-gray-500">Perito Assicurativo</p>
-                      <p className="font-semibold">{pratica.perito}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Compagnia</p>
-                      <p className="font-semibold">{pratica.compagnia}</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Colonna Destra - Preventivo e Timeline */}
-          <div className="space-y-6">
-            {/* Preventivo */}
-            <Card className="border-2 border-[#088395]">
-              <CardHeader className="bg-[#EBF4F6]">
-                <CardTitle className="text-[#088395] flex items-center justify-between">
-                  <span>Preventivo</span>
-                  <FileText className="h-5 w-5" />
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center pb-3 border-b">
-                    <span className="text-gray-600">Importo Totale</span>
-                    <span className="text-2xl font-bold text-[#088395]">
-                      €{pratica.importo.toLocaleString('it-IT', { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-500">ID Preventivo</span>
-                    <span className="font-mono text-xs">{pratica.preventivo.id}</span>
-                  </div>
-                  <Button variant="outline" className="w-full mt-4">
-                    <Download className="h-4 w-4 mr-2" />
-                    Scarica PDF
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Timeline Stati */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-[#088395]" />
-                  Timeline
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[
-                    { stato: 'non_assegnata', label: 'Ricevuta' },
-                    { stato: 'in_attesa', label: 'Assegnata' },
-                    { stato: 'in_lavorazione', label: 'In Lavorazione' },
-                    { stato: 'in_attesa_riconsegna', label: 'Pronta' },
-                    { stato: 'completata', label: 'Completata' },
-                  ].map((item, index) => {
-                    const flusso: Pratica['stato'][] = ['non_assegnata', 'in_attesa', 'in_lavorazione', 'in_attesa_riconsegna', 'completata'];
-                    const currentIndex = flusso.indexOf(pratica.stato);
-                    const isCompleted = index <= currentIndex;
-                    const isCurrent = index === currentIndex;
-
-                    return (
-                      <div key={item.stato} className="flex items-start gap-3">
-                        <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                          isCompleted ? 'bg-[#088395] text-white' : 'bg-gray-200 text-gray-400'
-                        }`}>
-                          {isCompleted ? (
-                            <CheckCircle2 className="h-5 w-5" />
-                          ) : (
-                            <span className="text-xs font-semibold">{index + 1}</span>
-                          )}
-                        </div>
-                        <div className="flex-1 pb-4">
-                          <p className={`font-semibold ${isCurrent ? 'text-[#088395]' : isCompleted ? 'text-gray-700' : 'text-gray-400'}`}>
-                            {item.label}
-                          </p>
-                          {isCurrent && (
-                            <p className="text-xs text-gray-500 mt-1">
-                              Stato attuale
-                            </p>
-                          )}
-                        </div>
+                  return (
+                    <div key={item.stato} className="flex items-start gap-4 relative">
+                      {/* Linea verticale */}
+                      {index !== 4 && (
+                        <div className={`absolute left-3.5 top-8 w-[2px] h-full -ml-[1px] ${isCompleted ? 'bg-[#0C7779]' : 'bg-gray-100'}`} />
+                      )}
+                      
+                      {/* Pallino */}
+                      <div className={`relative z-10 w-7 h-7 rounded-full flex items-center justify-center shrink-0 border-2 ${
+                        isCompleted ? 'bg-[#0C7779] border-[#0C7779] text-white' : 'bg-white border-gray-300 text-gray-300'
+                      }`}>
+                        {isCompleted ? <IonIcon icon={checkmarkCircleOutline} className="text-lg" /> : <div className="w-2 h-2 rounded-full bg-gray-300" />}
                       </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                      
+                      {/* Testo */}
+                      <div className="pt-1">
+                        <p className={`font-bold text-sm ${isCurrent ? 'text-[#0C7779]' : isCompleted ? 'text-[#0C2C55]' : 'text-gray-400'}`}>
+                          {item.label}
+                        </p>
+                        {isCurrent && <p className="text-xs text-[#249E94] font-medium mt-0.5">Stato attuale</p>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </IonCardContent>
+          </IonCard>
+
+          {/* BOTTONE SCARICA PDF */}
+          <button className="w-full bg-white border-2 border-[#0C7779] text-[#0C7779] py-3.5 rounded-2xl shadow-sm font-bold flex items-center justify-center gap-2 active:bg-[#629FAD]/10 active:scale-[0.98] transition-all">
+            <IonIcon icon={downloadOutline} className="text-xl" />
+            Scarica Preventivo PDF
+          </button>
+
         </div>
-      </div>
-    </div>
+      </IonContent>
+    </IonPage>
   );
 }

@@ -1,13 +1,37 @@
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Badge } from './ui/badge';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Search, Car, Calendar, User, Check, X, Bell, LogOut } from 'lucide-react';
-import { praticheMock, Pratica, getStatoLabel, getStatoColor } from '../data/mockData';
 import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
-import { notificationService, Notification } from '../services/notificationService';
 import { useNavigate } from 'react-router';
+import { toast } from 'sonner';
+import {
+  IonPage,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonButtons,
+  IonButton,
+  IonIcon,
+  IonBadge,
+  IonCard,
+  IonCardContent,
+  IonSegment,
+  IonSegmentButton,
+  IonSearchbar,
+  IonChip,
+  IonGrid,
+  IonRow,
+  IonCol
+} from '@ionic/react';
+import {
+  notificationsOutline,
+  logOutOutline,
+  carOutline,
+  personOutline,
+  calendarOutline,
+  checkmarkOutline,
+  closeOutline
+} from 'ionicons/icons';
+import { praticheMock, Pratica, getStatoLabel, getStatoColor } from '../data/mockData';
+import { notificationService, Notification } from '../services/notificationService';
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -19,7 +43,6 @@ export function Dashboard() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
-    // Sottoscrizione alle notifiche
     const unsubscribe = notificationService.subscribe(setNotificationCount);
     const unsubscribeNotifications = notificationService.subscribeNotifications(setNotifications);
     
@@ -45,17 +68,6 @@ export function Dashboard() {
     toast.success('Pratica rifiutata');
   };
 
-  const handleNotificationClick = (notification: Notification) => {
-    notificationService.markAsRead(notification.id);
-    if (notification.praticaId) {
-      setFiltroAssegnazione('non_assegnate');
-    }
-  };
-
-  const handleClearNotifications = () => {
-    notificationService.clearAll();
-  };
-
   const handleLogout = () => {
     toast.success('Logout effettuato');
     navigate('/');
@@ -63,13 +75,6 @@ export function Dashboard() {
 
   const handlePraticaClick = (pratica: Pratica) => {
     navigate(`/pratica/${pratica.id}`);
-  };
-
-  const handleCambioStato = (praticaId: string, nuovoStato: Pratica['stato']) => {
-    setPratiche(pratiche.map(p => 
-      p.id === praticaId ? { ...p, stato: nuovoStato } : p
-    ));
-    toast.success('Stato pratica aggiornato con successo');
   };
 
   // Filtro pratiche
@@ -99,247 +104,200 @@ export function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F4F4]">
-      {/* Header */}
-      <div className="bg-[#088395] border-b border-[#09637E]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl text-white">Dashboard Officina</h1>
-              <p className="text-[#EBF4F6] mt-1">Gestione pratiche e riparazioni</p>
-            </div>
-            <div className="flex items-center gap-4">
-              {/* Campanellina Notifiche */}
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => navigate('/notifiche')}
-                className="relative bg-white/10 hover:bg-white/20 text-white"
-                title="Visualizza notifiche"
-              >
-                <Bell className="h-5 w-5" />
-                {notificationCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {notificationCount}
-                  </span>
-                )}
-              </Button>
+    <IonPage>
+      {/* Testata App (Header Mobile: #005461 | Web: #088395) */}
+      <IonHeader className="ion-no-border">
+        <IonToolbar className="[--background:#005461] md:[--background:#088395] text-white">
+          <IonTitle>Dashboard</IonTitle>
+          <IonButtons slot="end">
+            <IonButton onClick={() => navigate('/notifiche')} className="relative">
+              <IonIcon icon={notificationsOutline} slot="icon-only" />
+              {notificationCount > 0 && (
+                <IonBadge color="danger" className="absolute top-0 right-0 transform translate-x-1 -translate-y-1 rounded-full text-[10px] px-1.5 py-0.5">
+                  {notificationCount}
+                </IonBadge>
+              )}
+            </IonButton>
+            <IonButton onClick={handleLogout}>
+              <IonIcon icon={logOutOutline} slot="icon-only" />
+            </IonButton>
+          </IonButtons>
+        </IonToolbar>
+      </IonHeader>
 
-              {/* Logout Button */}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleLogout}
-                className="bg-white/10 hover:bg-white/20 text-white"
-                title="Logout"
-              >
-                <LogOut className="h-5 w-5" />
-              </Button>
+      {/* Contenuto scrollabile (Sfondo Mobile: #EDEDCE | Web: #F4F4F4) */}
+      <IonContent className="[--background:#EDEDCE] md:[--background:#F4F4F4]">
+        
+        {/* Sfondo curva testata (Mobile: #005461 | Web: #088395) */}
+        <div className="bg-[#005461] md:bg-[#088395] px-4 pb-8 pt-2 rounded-b-[2rem] shadow-sm mb-4">
+          <h2 className="text-white text-xl font-medium">Officina Autorizzata</h2>
+          {/* Testo secondario (Mobile: #629FAD | Web: #EBF4F6) */}
+          <p className="text-[#629FAD] md:text-[#EBF4F6] text-sm mt-1">Gestione pratiche e riparazioni</p>
+        </div>
 
-              <div className="text-right">
-                <p className="text-sm text-[#EBF4F6]">Officina Autorizzata</p>
-                <p className="text-sm text-white">Martedì, 10 Febbraio 2026</p>
-              </div>
-            </div>
+        <div className="px-4 pb-8 -mt-6">
+          {/* Card Statistiche a Griglia */}
+          <IonGrid className="ion-no-padding mb-4">
+            <IonRow className="gap-2">
+              <IonCol className="p-0">
+                <IonCard className="m-0 shadow-sm rounded-xl bg-white">
+                  <IonCardContent className="p-3 text-center">
+                    <p className="text-xs text-[#296374] md:text-[#10546D] font-medium mb-1">In Attesa</p>
+                    <p className="text-2xl font-bold text-[#0C7779] md:text-[#5F9598]">{stats.in_attesa}</p>
+                  </IonCardContent>
+                </IonCard>
+              </IonCol>
+              <IonCol className="p-0">
+                <IonCard className="m-0 shadow-sm rounded-xl bg-white">
+                  <IonCardContent className="p-3 text-center">
+                    <p className="text-xs text-[#296374] md:text-[#10546D] font-medium mb-1">In Lavor.</p>
+                    <p className="text-2xl font-bold text-[#249E94] md:text-[#09637E]">{stats.in_lavorazione}</p>
+                  </IonCardContent>
+                </IonCard>
+              </IonCol>
+              <IonCol className="p-0">
+                <IonCard className="m-0 shadow-sm rounded-xl bg-white">
+                  <IonCardContent className="p-3 text-center">
+                    <p className="text-xs text-[#296374] md:text-[#10546D] font-medium mb-1">Pronte</p>
+                    <p className="text-2xl font-bold text-[#3BC1A8] md:text-[#088395]">{stats.in_attesa_riconsegna}</p>
+                  </IonCardContent>
+                </IonCard>
+              </IonCol>
+            </IonRow>
+          </IonGrid>
+
+          {/* Filtro Assegnazione Nativo (Mobile Checked: #0C7779 | Web Checked: #088395) */}
+          <IonSegment
+            value={filtroAssegnazione}
+            onIonChange={(e) => setFiltroAssegnazione(e.detail.value as any)}
+            className="mb-4 bg-white rounded-lg shadow-sm [--background-checked:#0C7779] md:[--background-checked:#088395] [--color-checked:#ffffff]"
+          >
+            <IonSegmentButton value="assegnate">
+              Assegnate ({stats.totale})
+            </IonSegmentButton>
+            <IonSegmentButton value="non_assegnate">
+              Da Assegnare ({stats.non_assegnate})
+            </IonSegmentButton>
+          </IonSegment>
+
+          {/* Barra Ricerca Nativa */}
+          <IonSearchbar
+            placeholder="Cerca numero, targa o cliente..."
+            value={searchTerm}
+            onIonInput={(e) => setSearchTerm(e.detail.value!)}
+            className="ion-no-padding mb-2 [--border-radius:10px] [--box-shadow:none] [--background:#ffffff]"
+          />
+
+          {/* Chips Filtro Stato orizzontali */}
+          <div className="flex overflow-x-auto gap-2 pb-4 hide-scrollbar">
+            {['tutti', 'in_attesa', 'in_lavorazione', 'in_attesa_riconsegna'].map((stato) => (
+              <IonChip
+                key={stato}
+                onClick={() => setFiltroStato(stato)}
+                className={`px-4 flex-shrink-0 ${
+                  filtroStato === stato 
+                    ? 'bg-[#005461] md:bg-[#088395] text-white' 
+                    : 'bg-white text-[#296374] md:text-gray-600 border border-[#629FAD] md:border-gray-200'
+                }`}
+              >
+                {stato === 'tutti' ? 'Tutte' : stato === 'in_attesa' ? 'In Attesa' : stato === 'in_lavorazione' ? 'In Lavorazione' : 'Pronte'}
+              </IonChip>
+            ))}
           </div>
-        </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Cards Statistiche */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-[#10546D]">Totale Pratiche</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl text-[#088395]">{stats.totale}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-[#10546D]">In Attesa</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl text-[#5F9598]">{stats.in_attesa}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-[#10546D]">In Lavorazione</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl text-[#09637E]">{stats.in_lavorazione}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-[#10546D]">Pronte</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl text-[#088395]">{stats.in_attesa_riconsegna}</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Barra ricerca e filtri */}
-        <Card className="mb-6">
-          <CardContent className="pt-6 space-y-4">
-            {/* Filtri Assegnazione */}
-            <div className="flex gap-3 pb-4 border-b">
-              <Button
-                variant={filtroAssegnazione === 'assegnate' ? 'default' : 'outline'}
-                onClick={() => setFiltroAssegnazione('assegnate')}
-                className="flex-1"
-              >
-                Assegnate ({stats.totale})
-              </Button>
-              <Button
-                variant={filtroAssegnazione === 'non_assegnate' ? 'default' : 'outline'}
-                onClick={() => setFiltroAssegnazione('non_assegnate')}
-                className="flex-1"
-              >
-                Non Assegnate ({stats.non_assegnate})
-              </Button>
-            </div>
-
-            {/* Ricerca e Filtri Stato */}
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Cerca per numero pratica, targa o cliente..."
-                  className="pl-10"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+          {/* Lista Pratiche */}
+          <div className="mt-2 space-y-4">
+            {praticheFiltrate.length === 0 ? (
+              <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-100">
+                <IonIcon icon={carOutline} className="text-4xl text-[#629FAD] md:text-gray-300 mb-2" />
+                <p className="text-[#296374] md:text-gray-500 font-medium">Nessuna pratica trovata</p>
               </div>
-              <div className="flex gap-2 flex-wrap">
-                <Button
-                  variant={filtroStato === 'tutti' ? 'default' : 'outline'}
-                  onClick={() => setFiltroStato('tutti')}
+            ) : (
+              praticheFiltrate.map((pratica) => (
+                <IonCard 
+                  key={pratica.id} 
+                  className={`m-0 shadow-sm rounded-xl border border-gray-100 bg-white ${pratica.assegnata ? 'active:opacity-70' : ''}`}
+                  onClick={() => pratica.assegnata && handlePraticaClick(pratica)}
                 >
-                  Tutte
-                </Button>
-                <Button
-                  variant={filtroStato === 'in_attesa' ? 'default' : 'outline'}
-                  onClick={() => setFiltroStato('in_attesa')}
-                >
-                  In Attesa
-                </Button>
-                <Button
-                  variant={filtroStato === 'in_lavorazione' ? 'default' : 'outline'}
-                  onClick={() => setFiltroStato('in_lavorazione')}
-                >
-                  In Lavorazione
-                </Button>
-                <Button
-                  variant={filtroStato === 'in_attesa_riconsegna' ? 'default' : 'outline'}
-                  onClick={() => setFiltroStato('in_attesa_riconsegna')}
-                >
-                  Pronte
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Lista Pratiche */}
-        <div className="space-y-4">
-          <h2 className="text-xl">
-            {filtroAssegnazione === 'assegnate' ? 'Pratiche Assegnate' : 'Pratiche Non Assegnate'} ({praticheFiltrate.length})
-          </h2>
-          
-          {praticheFiltrate.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <p className="text-gray-500">Nessuna pratica trovata</p>
-              </CardContent>
-            </Card>
-          ) : (
-            praticheFiltrate.map((pratica) => (
-              <Card 
-                key={pratica.id} 
-                className={`hover:shadow-lg transition-shadow ${pratica.assegnata ? 'cursor-pointer' : ''}`}
-                onClick={() => pratica.assegnata && handlePraticaClick(pratica)}
-              >
-                <CardContent className="p-6">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <span className="text-lg">{pratica.numero}</span>
-                        <Badge className={`${getStatoColor(pratica.stato)} border`}>
-                          {getStatoLabel(pratica.stato)}
-                        </Badge>
+                  <IonCardContent className="p-4">
+                    {/* Header Card */}
+                    <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold text-[#0C2C55] md:text-gray-800">{pratica.numero}</span>
                         {!pratica.assegnata && (
-                          <Badge className="bg-[#F3F4F4] text-[#10546D] border-[#7AB2B2] border">
+                          <span className="bg-orange-100 text-orange-800 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
                             Da Assegnare
-                          </Badge>
+                          </span>
                         )}
                       </div>
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${getStatoColor(pratica.stato)}`}>
+                        {getStatoLabel(pratica.stato)}
+                      </span>
+                    </div>
+                    
+                    {/* Dettagli Griglia */}
+                    <div className="grid grid-cols-2 gap-y-4 gap-x-2 text-sm">
+                      <div className="flex items-start gap-2">
+                        <IonIcon icon={carOutline} className="text-[#0C7779] md:text-[#088395] text-lg mt-0.5" />
+                        <div>
+                          <p className="text-xs text-[#296374] md:text-gray-500 font-medium">Veicolo</p>
+                          <p className="font-semibold text-[#0C2C55] md:text-gray-800">{pratica.veicolo.marca} {pratica.veicolo.modello}</p>
+                          <p className="text-xs text-[#629FAD] md:text-gray-500">{pratica.veicolo.targa}</p>
+                        </div>
+                      </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                        <div className="flex items-center gap-2">
-                          <Car className="h-4 w-4 text-gray-400" />
-                          <div>
-                            <p className="text-gray-600">Veicolo</p>
-                            <p>{pratica.veicolo.marca} {pratica.veicolo.modello}</p>
-                            <p className="text-gray-500">{pratica.veicolo.targa}</p>
-                          </div>
+                      <div className="flex items-start gap-2">
+                        <IonIcon icon={personOutline} className="text-[#0C7779] md:text-[#088395] text-lg mt-0.5" />
+                        <div>
+                          <p className="text-xs text-[#296374] md:text-gray-500 font-medium">Cliente</p>
+                          <p className="font-semibold text-[#0C2C55] md:text-gray-800 line-clamp-1">{pratica.automobilista.nome} {pratica.automobilista.cognome}</p>
                         </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-gray-400" />
+                      </div>
+                      
+                      <div className="flex items-start gap-2 col-span-2">
+                        <IonIcon icon={calendarOutline} className="text-[#0C7779] md:text-[#088395] text-lg mt-0.5" />
+                        <div className="flex-1 flex justify-between items-center">
                           <div>
-                            <p className="text-gray-600">Cliente</p>
-                            <p>{pratica.automobilista.nome} {pratica.automobilista.cognome}</p>
-                            <p className="text-gray-500">{pratica.automobilista.telefono}</p>
+                            <p className="text-xs text-[#296374] md:text-gray-500 font-medium">Data Apertura</p>
+                            <p className="font-semibold text-[#0C2C55] md:text-gray-800">{new Date(pratica.dataApertura).toLocaleDateString('it-IT')}</p>
                           </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-gray-400" />
-                          <div>
-                            <p className="text-gray-600">Data Apertura</p>
-                            <p>{new Date(pratica.dataApertura).toLocaleDateString('it-IT')}</p>
-                            <p className="text-gray-500">Importo: €{pratica.preventivo.importoTotale.toFixed(2)}</p>
+                          <div className="text-right">
+                            <p className="text-xs text-[#296374] md:text-gray-500 font-medium">Importo</p>
+                            <p className="font-semibold text-[#0C7779] md:text-[#088395]">€{pratica.preventivo.importoTotale.toFixed(2)}</p>
                           </div>
                         </div>
                       </div>
                     </div>
                     
-                    <div>
-                      {pratica.assegnata ? (
-                        <Button>
-                          Visualizza
-                        </Button>
-                      ) : (
-                        <div className="flex gap-2">
-                          <Button
-                            onClick={(e) => handleAccettaPratica(pratica.id, e)}
-                            className="bg-[#088395] hover:bg-[#09637E]"
-                          >
-                            <Check className="h-4 w-4 mr-2" />
-                            Accetta
-                          </Button>
-                          <Button
-                            variant="outline"
-                            onClick={(e) => handleRifiutaPratica(pratica.id, e)}
-                            className="border-[#9A6463] text-[#9A6463] hover:bg-[#9A6463] hover:text-white"
-                          >
-                            <X className="h-4 w-4 mr-2" />
-                            Rifiuta
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
+                    {/* Pulsanti Azione (Solo per Non Assegnate) */}
+                    {!pratica.assegnata && (
+                      <div className="flex gap-2 mt-4 pt-3 border-t border-gray-100">
+                        <IonButton
+                          expand="block"
+                          className="flex-1 [--background:#0C7779] md:[--background:#088395] [--border-radius:8px]"
+                          onClick={(e) => handleAccettaPratica(pratica.id, e)}
+                        >
+                          <IonIcon icon={checkmarkOutline} slot="start" />
+                          Accetta
+                        </IonButton>
+                        <IonButton
+                          expand="block"
+                          fill="outline"
+                          className="flex-1 [--color:#9A6463] md:[--color:#9A6463] [--border-color:#9A6463] [--border-radius:8px]"
+                          onClick={(e) => handleRifiutaPratica(pratica.id, e)}
+                        >
+                          <IonIcon icon={closeOutline} slot="start" />
+                          Rifiuta
+                        </IonButton>
+                      </div>
+                    )}
+                  </IonCardContent>
+                </IonCard>
+              ))
+            )}
+          </div>
         </div>
-      </div>
-    </div>
+      </IonContent>
+    </IonPage>
   );
 }
